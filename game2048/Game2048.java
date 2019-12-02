@@ -4,13 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.util.Scanner;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Scanner;
 
 /**
  *
@@ -31,16 +28,16 @@ public class Game2048 extends JPanel{
     final Color[] valueColor = {
         new Color(0x776E65), new Color(0xF9F6F2)
     };  
-    private Color gridColor = new Color(0xBBADA0);
-    private Color emptyColor = new Color(0xCDC1B4);
-    private Color startColor = new Color(0xFFEBCD);
+    private final Color gridColor = new Color(0xBBADA0);
+    private final Color emptyColor = new Color(0xCDC1B4); //empty tile
+    private final Color startColor = new Color(0xFFEBCD); //third layer color
  
     private Random rand = new Random();
     
     static int score;
     static int best_score;
     private Tile[][] tiles;
-    private int side = 4;
+    private final int side = 4;
     private boolean checkMove;
     private State gamestate = State.start;
     String path = System.getProperty("user.dir")+"\\load.txt";
@@ -57,7 +54,28 @@ public class Game2048 extends JPanel{
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     startGame();
-                    repaint();
+                }
+                
+                if (e.getKeyCode() == KeyEvent.VK_R) {
+                    restartGame();
+                }
+                
+                if (e.getKeyCode() == KeyEvent.VK_L) {
+                    try {
+                        loadGame();
+                        JOptionPane.showMessageDialog(null, "Load Game Thành Công", "2048", JOptionPane.INFORMATION_MESSAGE);      
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null, "Không thể load game", "2048", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+                
+                if (e.getKeyCode() == KeyEvent.VK_S) {
+                    try {                    
+                        saveGame();
+                        JOptionPane.showMessageDialog(null, "Game Đã Được Lưu", "2048", JOptionPane.INFORMATION_MESSAGE);
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null, "Lưu Game KHÔNG Thành Công", "2048", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
         });
@@ -83,46 +101,6 @@ public class Game2048 extends JPanel{
             }
         });
         
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_R) {
-                    restartGame();
-                    repaint();
-                }
-            }
-        });
-        
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_L) {
-                    try {
-                        loadGame();
-                        JOptionPane.showMessageDialog(null, "Load Game Thành Công", "2048", JOptionPane.INFORMATION_MESSAGE);      
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(null, "Không thể load game\nC:\\Users\\Public\\Documents\\2048\\load.txt", 
-                                "2048", JOptionPane.ERROR_MESSAGE);
-                    }
-                    repaint();
-                }
-            }
-        });
-        
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_S) {
-                    try {                    
-                        saveGame();
-                        JOptionPane.showMessageDialog(null, "Game Đã Được Lưu", "2048", JOptionPane.INFORMATION_MESSAGE);
-                    } catch (IOException ex) {
-                        JOptionPane.showMessageDialog(null, "Lưu Game KHÔNG Thành Công", "2048", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-        });
-                
     }
     
     //Draw grid & tiles
@@ -189,10 +167,10 @@ public class Game2048 extends JPanel{
             for (int col=0; col<side; col++) {                
                 if (tiles[row][col] == null) {
                     fw.write(String.valueOf(0)+" ");
-                    continue;
+                } else {
+                    value = tiles[row][col].getValue();                
+                    fw.write(String.valueOf(value)+" ");
                 }
-                value = tiles[row][col].getValue();                
-                fw.write(String.valueOf(value)+" ");
             }
             fw.write(System.getProperty("line.separator"));
         }
@@ -219,7 +197,7 @@ public class Game2048 extends JPanel{
             
             g2d.setColor(valueColor[1]);
             g2d.setFont(new Font("SansSerif", Font.BOLD, 15));            
-            drawStringCenter(g2d, "SCORE", 100, 18, 44);    //(g2d, string, width of componet, XPos of conponet, YPos of string)
+            drawStringCenter(g2d, "SCORE", 100, 18, 44);    //(g2d, string, width of component, XPos of conponet, YPos of string)
             drawStringCenter(g2d, "BEST", 100, 130, 44);
             
             String s = String.valueOf(score);   
@@ -290,10 +268,10 @@ public class Game2048 extends JPanel{
         drawStringCenter(g2d, s, 90, x, y);
     }
     
-    private void drawStringCenter(Graphics2D g2d, String str, int width, int XPos, int YPos){
+    private void drawStringCenter(Graphics2D g2d, String str, int width_rect, int xPos_rect, int yPos_string){
         int stringLen = (int) g2d.getFontMetrics().getStringBounds(str, g2d).getWidth();
-        int startPos = (width - stringLen) / 2;
-        g2d.drawString(str, startPos + XPos, YPos);
+        int startPos = (width_rect - stringLen) / 2;
+        g2d.drawString(str, startPos + xPos_rect, yPos_string);
     }
  
     private void addRandomTile() {
@@ -355,7 +333,8 @@ public class Game2048 extends JPanel{
             clearTile();
             addRandomTile();
             if (!moveAvailable()) {
-                gamestate = State.gameover;                
+                gamestate = State.gameover;         
+                JOptionPane.showMessageDialog(null, "Game Over", "2048", JOptionPane.INFORMATION_MESSAGE);
                 if (score > best_score) {
                     best_score = score;
                 }
@@ -382,10 +361,10 @@ public class Game2048 extends JPanel{
     }
     
     void clearTile() {
-        for (Tile[] row : tiles)
-            for (Tile tile : row)
-                if (tile != null)
-                    tile.setMerged(false);
+        for (int row=0; row<side; row++)
+            for (int col=0; col<side; col++)
+                if (tiles[row][col] != null)
+                    tiles[row][col].setMerged(false);
     }
     
     boolean moveAvailable() {
@@ -406,10 +385,6 @@ class Tile {
  
     int getValue() {
         return value;
-    }
-    
-    void setValue(int v) {
-        this.value = v;
     }
  
     void setMerged(boolean m) {

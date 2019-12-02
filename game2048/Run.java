@@ -15,17 +15,17 @@ public class Run {
         SwingUtilities.invokeLater(() -> {
             try { 
                 UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel"); 
-            } catch(Exception ignored){}
+            } catch(Exception ignored){
+                System.out.println(ignored);}
             JFrame frame = new JFrame();
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setTitle("2048");
             frame.add(new Game2048(), BorderLayout.CENTER);
             frame.pack();
-            frame.setResizable(true);
+            frame.setResizable(false);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-            frame.setMinimumSize(new Dimension(425, 525));  //425
-            
+            frame.setMinimumSize(new Dimension(425, 525));
         });
     }
 }
